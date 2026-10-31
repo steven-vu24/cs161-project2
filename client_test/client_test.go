@@ -316,6 +316,86 @@ var _ = Describe("Client Tests", func() {
 			_ = data
 		})
 
+		
+		Specify("Testing if user data gets changed", func() {
+			alice, err = client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			datastore := userlib.DatastoreGetMap()
+
+			for id, value := range datastore {
+				if len(value) > 0 {
+					changed := make([]byte, len(value))
+
+					for i := 0; i < len(value); i++ {
+						changed[i] = value[i]
+					}
+
+					changed[len(changed)-1] = changed[len(changed)-1] ^ 255
+					userlib.DatastoreSet(id, changed)
+				}
+			}
+
+			aliceLaptop, err = client.GetUser("alice", "password")
+			Expect(err).ToNot(BeNil())
+		})
+
+		Specify("Testing if file data gets deleted", func() {
+			alice, err = client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			filename := "test.txt"
+			content := "Hello world"
+
+			err = alice.StoreFile(filename, []byte(content))
+			Expect(err).To(BeNil())
+
+			datastore := userlib.DatastoreGetMap()
+
+			for id := range datastore {
+				userlib.DatastoreDelete(id)
+			}
+
+			data, err := alice.LoadFile(filename)
+			Expect(err).ToNot(BeNil())
+			_ = data
+		})
+
+		Specify("Testing if invitation data gets changed", func() {
+			alice, err = client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			bob, err = client.InitUser("bob", "password")
+			Expect(err).To(BeNil())
+
+			err = alice.StoreFile("test.txt", []byte("Hello"))
+			Expect(err).To(BeNil())
+
+			invite, err := alice.CreateInvitation("test.txt", "bob")
+			Expect(err).To(BeNil())
+
+			datastore := userlib.DatastoreGetMap()
+
+			for id, value := range datastore {
+				if id == invite {
+					if len(value) > 0 {
+						changed := make([]byte, len(value))
+
+						for i := 0; i < len(value); i++ {
+							changed[i] = value[i]
+						}
+
+						changed[0] = changed[0] ^ 255
+						userlib.DatastoreSet(id, changed)
+					}
+				}
+			}
+
+			err = bob.AcceptInvitation("alice", invite, "bob.txt")
+			Expect(err).ToNot(BeNil())
+		})
+
+
 
 
 	})
