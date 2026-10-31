@@ -12,11 +12,11 @@ To test your implementation, run `go test -v` inside of the `client_test` direct
 
 Fill in this section with the student IDs of all the members in your project group.
 
-Partner 1 Name:
+Partner 1 Name: Steven Vu
 
-Partner 1 SID:
+Partner 1 SID: 3041736636
 
-Partner 1 Email:
+Partner 1 Email: stevenvu446@berkeley.edu
 
 Partner 2 Name (if applicable):
 
