@@ -250,5 +250,73 @@ var _ = Describe("Client Tests", func() {
 			Expect(err).ToNot(BeNil())
 		})
 
+		Specify("Testing duplicate usernames", func(){
+			alice, err = client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			aliceLaptop, err = client.InitUser("alice", "password123")
+			Expect(err).ToNot(BeNil())
+		})
+
+		Specify("Testing wrong password", func(){
+			alice, err = client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			aliceLaptop, err = client.GetUser("alice", "wrongpassword")
+			Expect(err).ToNot(BeNil())
+		})
+
+		Specify("Testing loading a file that does not exist", func(){
+			alice, err = client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			filename := "test.txt"
+
+			data, err := alice.LoadFile(filename)
+			Expect(err).ToNot(BeNil())
+			_ = data 
+		})
+
+		Specify("Testing user that does not exist", func(){
+			alice, err = client.GetUser("alice", "passowrd")
+			Expect(err).ToNot(BeNil())
+		})
+
+		Specify("Testing if datastore data is changed", func(){
+			alice, err = client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			filename := "test.txt"
+			content := "Hello this is my file"
+
+			err = alice.StoreFile(filename, []byte(content))
+			Expect(err).To(BeNil())
+
+			data, err := alice.LoadFile(filename)
+			Expect(err).To(BeNil())
+			Expect(data).To(Equal([]byte(content)))
+
+			datastore := userlib.DatastoreGetMap()
+
+			for id, value := range datastore {
+				if len(value) > 0 {
+					newValue := make([]byte, len(value))
+
+					for i := 0; i < len(value); i++ {
+						newValue[i] = value[i]
+					}
+
+					newValue[0] = newValue[0] ^ 225
+
+					userlib.DatastoreSet(id, newValue)
+				}
+			}
+			data, err = alice.LoadFile(filename)
+			Expect(err).ToNot(BeNil())
+			_ = data
+		})
+
+
+
 	})
 })
