@@ -395,6 +395,47 @@ var _ = Describe("Client Tests", func() {
 			Expect(err).ToNot(BeNil())
 		})
 
+				
+		Specify("Testing sharing with a user that does not exist", func() {
+			alice, err = client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			filename := "test.txt"
+			content := "Hello world"
+
+			err = alice.StoreFile(filename, []byte(content))
+			Expect(err).To(BeNil())
+
+			invite, err := alice.CreateInvitation(filename, "bob")
+			Expect(err).ToNot(BeNil())
+			_ = invite
+		})
+
+		Specify("Testing accepting invitation with existing filename", func() {
+			alice, err = client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			bob, err = client.InitUser("bob", "password")
+			Expect(err).To(BeNil())
+
+			err = alice.StoreFile("alice.txt", []byte("Alice file"))
+			Expect(err).To(BeNil())
+
+			err = bob.StoreFile("bob.txt", []byte("Bob file"))
+			Expect(err).To(BeNil())
+
+			invite, err := alice.CreateInvitation("alice.txt", "bob")
+			Expect(err).To(BeNil())
+
+			err = bob.AcceptInvitation("alice", invite, "bob.txt")
+			Expect(err).ToNot(BeNil())
+
+			data, err := bob.LoadFile("bob.txt")
+			Expect(err).To(BeNil())
+			Expect(data).To(Equal([]byte("Bob file")))
+		})
+
+
 
 
 
