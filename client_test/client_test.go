@@ -448,9 +448,118 @@ var _ = Describe("Client Tests", func() {
 			Expect(err).ToNot(BeNil())
 		})
 
+		
+		Specify("Testing invitation with wrong sender", func() {
+			alice, err := client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
 
+			bob, err := client.InitUser("bob", "password")
+			Expect(err).To(BeNil())
 
+			_, err = client.InitUser("charlie", "password")
+			Expect(err).To(BeNil())
 
+			err = alice.StoreFile("file.txt", []byte("Hello"))
+			Expect(err).To(BeNil())
+
+			invite, err := alice.CreateInvitation("file.txt", "bob")
+			Expect(err).To(BeNil())
+
+			err = bob.AcceptInvitation("charlie", invite, "shared.txt")
+			Expect(err).ToNot(BeNil())
+		})
+
+		Specify("Testing invitation accepted by wrong user", func() {
+			alice, err := client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			_, err = client.InitUser("bob", "password")
+			Expect(err).To(BeNil())
+
+			charlie, err := client.InitUser("charlie", "password")
+			Expect(err).To(BeNil())
+
+			err = alice.StoreFile("file.txt", []byte("Hello"))
+			Expect(err).To(BeNil())
+
+			invite, err := alice.CreateInvitation("file.txt", "bob")
+			Expect(err).To(BeNil())
+
+			err = charlie.AcceptInvitation("alice", invite, "shared.txt")
+			Expect(err).ToNot(BeNil())
+		})
+
+		Specify("Testing revoking a user without access", func() {
+			alice, err := client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			_, err = client.InitUser("bob", "password")
+			Expect(err).To(BeNil())
+
+			err = alice.StoreFile("file.txt", []byte("Hello"))
+			Expect(err).To(BeNil())
+
+			err = alice.RevokeAccess("file.txt", "bob")
+			Expect(err).ToNot(BeNil())
+
+			data, err := alice.LoadFile("file.txt")
+			Expect(err).To(BeNil())
+			Expect(data).To(Equal([]byte("Hello")))
+		})
+
+		Specify("Testing overwriting existing file", func() {
+			alice, err := client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			err = alice.StoreFile("file.txt", []byte("First"))
+			Expect(err).To(BeNil())
+
+			err = alice.AppendToFile("file.txt", []byte("Second"))
+			Expect(err).To(BeNil())
+
+			err = alice.StoreFile("file.txt", []byte("New"))
+			Expect(err).To(BeNil())
+
+			data, err := alice.LoadFile("file.txt")
+			Expect(err).To(BeNil())
+			Expect(data).To(Equal([]byte("New")))
+		})
+
+		Specify("Testing revocation keeps other users access", func() {
+			alice, err := client.InitUser("alice", "password")
+			Expect(err).To(BeNil())
+
+			bob, err := client.InitUser("bob", "password")
+			Expect(err).To(BeNil())
+
+			charlie, err := client.InitUser("charlie", "password")
+			Expect(err).To(BeNil())
+
+			err = alice.StoreFile("file.txt", []byte("Hello"))
+			Expect(err).To(BeNil())
+
+			inviteBob, err := alice.CreateInvitation("file.txt", "bob")
+			Expect(err).To(BeNil())
+
+			err = bob.AcceptInvitation("alice", inviteBob, "bob.txt")
+			Expect(err).To(BeNil())
+
+			inviteCharlie, err := alice.CreateInvitation("file.txt", "charlie")
+			Expect(err).To(BeNil())
+
+			err = charlie.AcceptInvitation("alice", inviteCharlie, "charlie.txt")
+			Expect(err).To(BeNil())
+
+			err = alice.RevokeAccess("file.txt", "bob")
+			Expect(err).To(BeNil())
+
+			_, err = bob.LoadFile("bob.txt")
+			Expect(err).ToNot(BeNil())
+
+			data, err := charlie.LoadFile("charlie.txt")
+			Expect(err).To(BeNil())
+			Expect(data).To(Equal([]byte("Hello")))
+		})
 
 	})
 })
