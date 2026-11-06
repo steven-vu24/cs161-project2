@@ -435,6 +435,19 @@ var _ = Describe("Client Tests", func() {
 			Expect(data).To(Equal([]byte("Bob file")))
 		})
 
+		Specify("Testing user creation and login", func() {
+			alice, err := client.InitUser("alice", "password123")
+			Expect(err).To(BeNil())
+			Expect(alice).ToNot(BeNil())
+
+			aliceAgain, err := client.GetUser("alice", "password123")
+			Expect(err).To(BeNil())
+			Expect(aliceAgain.Username).To(Equal("alice"))
+
+			_, err = client.GetUser("alice", "wrongpassword")
+			Expect(err).ToNot(BeNil())
+		})
+
 
 
 
