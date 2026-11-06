@@ -1820,6 +1820,11 @@ func (userdata *User) CreateInvitation(filename string, recipientUsername string
 	recipientReferenceUUID := uuid.New()
 	recipientReferenceKey := userlib.RandomBytes(16)
 
+	if fileReference.Owner != userdata.Username {
+		recipientReferenceUUID = namespaceEntry.ReferenceUUID
+		recipientReferenceKey = namespaceEntry.ReferenceKey
+	}
+
 	recipientReference := fileReference
 
 	recipientReferenceBytes, err := json.Marshal(recipientReference)
